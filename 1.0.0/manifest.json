@@ -31,7 +31,7 @@
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqAjJVmrHegIgSKSdskPKc/bPubL9e5h5JeykMTEEKILifO5NFvH9gd5vlEynF/wmGIZUub6gikPSdAWjIoQXfXguyGLKWyALO3IZyS0pqoFLgzKrxrd9ObfCpXE+7nImpCoR5FxVqtvwBdCcyfP6N+W1WQntxZEhSqtMTEP04Ruf4DpNNV87eGWQTglb+PllXbfchYuCREDEbZv454n2HyyOgmUNcHPhxbi5pepKxB0B2Vul2vx7TAA/zRNjBk0n24HrtM0Ebv3tzmKQPXNtlRnGFiGhBLd5HPo7yup0oc2mNe+HvGB9PbO4mB3ARr1CDK/VmXeJbqLfeCHrnvdabQIDAQAB",
     "manifest_version": 3,
     "name": "__MSG_appName__",
-    "permissions": [ "tabs", "scripting", "storage" ],
+    "permissions": [ "tabs", "scripting", "storage", "activeTab" ],
     "version": "1.0.0",
     "web_accessible_resources": [ {
        "matches": [ "\u003Call_urls\u003E" ],

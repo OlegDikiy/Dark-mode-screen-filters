@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 	// DOM элементы
+	// Welcome page link in background.js
+	// Uninstal link not supported in manifest v3
+	const urlStorePage = 'https://google.com';
+	const urlFeedback = 'https://ya.ru';
+
 	const intensityRangeInput = document.getElementById('screenFilterIntensity');
 	const intensityRangeCounter = document.querySelector('.intensity-range-counter');
 	
@@ -162,11 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (handler) handler();
 		};
 
-		chrome.storage.local.set(settings);
-		// Отладка - логирование хранилища
-		chrome.storage.local.get(null, function(data) {
-			console.log("Все данные из хранилища:", data);
-		});
+		chrome.storage.local.set( settings );
 	}
 
 	// Обработчики изменений настроек
@@ -245,9 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				updateBrightnessRange();
 				updateGrayscaleRange();
 			
-        if (data.rollup === true) {  // Используем строгое сравнение с boolean
+        if (data.rollup === true) {  
           console.log('загруженное состояние, свернуто');
-          shutdownButton.checked = true;  // Устанавливаем состояние чекбокса
+          shutdownButton.checked = true;  
           shutdown();
       };
       }
@@ -323,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			`;
 		}
 
-		counter.textContent = `${value}`;
+		counter.textContent = `${value > 0 ? '+' : ''}${value}`;
 	};
 
 	// Инициализация range inputs
@@ -360,6 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
     element.addEventListener('click', function() {
       let checkedStar = determineCheckedButtonId( allStarsButton );
 	  chrome.storage.local.set( {ratingStar: checkedStar} );
+	  if ( checkedStar === 'star5' || checkedStar === 'star4' ) {
+		chrome.tabs.create({ url: urlStorePage });
+	  } else {
+		chrome.tabs.create({ url: urlFeedback });
+	  }
     });
   });
 

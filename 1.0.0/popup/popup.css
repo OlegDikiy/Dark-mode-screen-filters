@@ -291,21 +291,56 @@ main {
 
 .shutdown-button {
   all: unset;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 36px;
   height: 36px;
   border-radius: 6px;
   background-color: var(--extention-bg-color);
-  background-image: url('../assets/icons/shutdown-icon.svg');
   background-repeat: no-repeat;
   background-position: center;
   cursor: pointer;
 }
 
-.shutdown-button:hover,
-.shutdown-button:checked {
+.shutdown-button::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  mask: url('../assets/icons/shutdown-icon.svg') no-repeat center / contain;
+  background-color: #fff;
+}
+
+.shutdown-button:checked::before {
+  background-color: #141418;
+}
+
+.shutdown-button:hover {
   background-color: var(--hover-mode-button-bg-color);
+}
+
+.shutdown-button:checked {
+  background-color: #fff;
+  fill: #141418;
+}
+
+.shutdown-button:checked:hover {
+  background-color: #DBDBDB;
 }
 
 .range-bar {
   margin: 0 0 18px;
+}
+
+.color-filter-overlay {
+  transition: opacity 0.5s;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; 
+  z-index: 2147483647; 
+  mix-blend-mode: multiply; 
 }
