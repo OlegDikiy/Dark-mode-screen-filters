@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Загрузка настроек
 	function loadSettings() {
 		chrome.storage.local.get(
-			['blueLight', 'colorIntensity', 'shade', 'brightness', 'contrast', 'grayscale', 'color', 'currentTab', 'currentMode', 'rollup'], 
+			['blueLight', 'colorIntensity', 'shade', 'brightness', 'contrast', 'grayscale', 'color', 'currentTab', 'currentMode', 'rollup', 'ratingStar'], 
 			function(data) {
 				// Установка значений для раздельных фильтров
 				blueLightSeparateInput = data.blueLight || 0;
@@ -227,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (data.grayscale) grayscaleRangeInput.value = data.grayscale;
 				
 				// Восстановление цветных radio-кнопок
+<<<<<<< Updated upstream
 				const colorButtons = [
 					{ obj: document.getElementById('color-filter-button1'), color: '#FF6A6A' },
 					{ obj: document.getElementById('color-filter-button2'), color: '#FEB669' },
@@ -241,6 +242,31 @@ document.addEventListener('DOMContentLoaded', () => {
 					let checkedColor = findButtonByColor(colorButtons, data.color);
 					checkedColor.checked = true;
 				}
+=======
+				if ( data.color ) {
+					const setColorFilter = [...document.querySelectorAll('.color-filter-button')]
+					.find(button => {
+    					const buttonColor = rgbToHex(window.getComputedStyle(button).backgroundColor);
+    					return buttonColor === data.color.toLowerCase();
+  					});
+
+					if (setColorFilter) {
+  						setColorFilter.checked = true;
+					};
+				};
+>>>>>>> Stashed changes
+
+				chrome.storage.local.get(['ratingStar'], function(data) {
+					if (data.ratingStar) {
+						const stars = Array.from(allStarsButton);
+						const activeStar = document.getElementById(data.ratingStar);
+						const activeIndex = stars.indexOf(activeStar);
+						
+						if (activeIndex !== -1) {
+							updateStarsVisualState(stars, activeIndex);
+						}
+					}
+				});
 
 				// Обновление стилей range inputs
 				updateIntensityRangeStyle();
@@ -346,19 +372,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	updateGrayscaleRange();
 
 	// Рейтинг звёздами
-	document.querySelectorAll('.rating-form-star').forEach((star, index, stars) => {
+	function updateStarsVisualState(stars, activeIndex) {
+		stars.forEach((star, index) => {
+			star.classList.toggle('active', index >= activeIndex);
+		});
+	};			
+
+	allStarsButton.forEach((star, index, stars) => {
 		star.addEventListener('click', () => {
-			stars.forEach(s => s.classList.remove('active'));
-			stars.forEach((s, i) => {
-				if (i >= index) s.classList.add('active');
-			});
+			updateStarsVisualState(stars, index);
 		});
 	});
 
   // Сохранение звёзд
   allStarsButton.forEach(element => {
     element.addEventListener('click', function() {
-      chrome.storage.local.clear();
+      let checkedStar = determineCheckedButtonId( allStarsButton );
+	  chrome.storage.local.set( {ratingStar: checkedStar} );
     });
   });
 
@@ -366,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
   shutdownButton.addEventListener('click', ()=> {
     shutdown();
     if (shutdownButton.checked) {
-      chrome.storage.local.set({ rollup: true });
+      chrome.storage.local.set( { rollup: true } );
       chrome.storage.local.get(null, function(data) {
         console.log("Все данные из хранилища:", data);
       });
