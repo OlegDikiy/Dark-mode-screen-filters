@@ -215,22 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (data.grayscale) grayscaleRangeInput.value = data.grayscale;
 				
 				// Восстановление цветных radio-кнопок
-<<<<<<< Updated upstream
-				const colorButtons = [
-					{ obj: document.getElementById('color-filter-button1'), color: '#FF6A6A' },
-					{ obj: document.getElementById('color-filter-button2'), color: '#FEB669' },
-					{ obj: document.getElementById('color-filter-button3'), color: '#EB7FED' },
-					{ obj: document.getElementById('color-filter-button4'), color: '#56F8BF' },
-					{ obj: document.getElementById('color-filter-button5'), color: '#E7F589' },
-					{ obj: document.getElementById('color-filter-button6'), color: '#9DE6FD' },
-					{ obj: document.getElementById('color-filter-button7'), color: '#53A9FF' },
-				];
-
-				if (data.color) {
-					let checkedColor = findButtonByColor(colorButtons, data.color);
-					checkedColor.checked = true;
-				}
-=======
 				if ( data.color ) {
 					const setColorFilter = [...document.querySelectorAll('.color-filter-button')]
 					.find(button => {
@@ -242,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
   						setColorFilter.checked = true;
 					};
 				};
->>>>>>> Stashed changes
 
 				chrome.storage.local.get(['ratingStar'], function(data) {
 					if (data.ratingStar) {
