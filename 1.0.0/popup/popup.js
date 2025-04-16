@@ -30,19 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
 	let blueLightSeparateInput = 0;
 	let colorSeparateInput = 0;
 
-  // Первый запуск 
-  intensityRangeInput.addEventListener('mousedown', () => {
-    const noActiveFilter = (
-      !screenFilterBlueLightButton?.checked &&
-      !screenFilterShadeButton?.checked &&
-      !screenFilterColorButton?.checked
-    );
+	// Первый запуск 
+  	intensityRangeInput.addEventListener('mousedown', () => {
+    	const noActiveFilter = (
+      		!screenFilterBlueLightButton?.checked &&
+      		!screenFilterShadeButton?.checked &&
+      		!screenFilterColorButton?.checked
+    	);
 
-    if (intensityRangeInput.value == '0' && noActiveFilter) {
-      console.log('paw');
-      screenFilterShadeButton.checked = true;
-    }
-  });
+    	if (intensityRangeInput.value == '0' && noActiveFilter) {
+    		console.log('paw');
+    		screenFilterShadeButton.checked = true;
+    	}
+  	});
 
   allScreenFilterTabs.forEach(element => {
     element.addEventListener('click', function() {
@@ -69,54 +69,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 	// Вспомогательные функции
-	function determineCheckedButton(list) {
+	function determineCheckedButtonId(list) {
 		for (const button of list) {
 			if (button.checked) {
-				return button;
+				return button.id;
 			}
 		}
-		return null;
-	}
+	};
 
 	function rgbToHex(rgb) {
 		const [r, g, b] = rgb.match(/\d+/g).map(Number);
 		return '#' + [r, g, b].map(x => 
-			x.toString(16).padStart(2, '0')
-		).join('');
-	}
-
-	function findButtonByColor(colorButtons, targetColor) {
-		if (!targetColor) return null;
-		
-		for (let i = colorButtons.length - 1; i >= 0; i--) {
-			if (colorButtons[i].color.toLowerCase() === targetColor) {
-				return colorButtons[i].obj;
-			}
-		}
-		return null;
-	}
+		  x.toString(16).padStart(2, '0')
+		).join('').toLowerCase();
+	  }
 
 	// Разделение range input для фильтров
-	document.querySelectorAll('.screen-filter-type-button').forEach(element => {
+	allScreenFilterTabs.forEach(element => {
 		element.addEventListener('click', separateInput);
 	});
 
 	function separateInput() {
-		let currentTab = determineCheckedButton( allScreenFilterTabs );
-		switch (currentTab.id) {
-			case 'screenFilterShadeButton':
-				intensityRangeInput.value = shadeSeparateInput;
-				break;
-			case 'screenFilterBlueLightButton':
-				intensityRangeInput.value = blueLightSeparateInput;
-				break;
-			case 'screenFilterColorButton':
-				intensityRangeInput.value = colorSeparateInput;
-				break;
-		}
+		const valueMap = {
+			'screenFilterShadeButton': shadeSeparateInput,
+			'screenFilterBlueLightButton': blueLightSeparateInput,
+			'screenFilterColorButton': colorSeparateInput
+		};
+
+		const buttonId = determineCheckedButtonId( allScreenFilterTabs );
+
+		intensityRangeInput.value = valueMap[buttonId] || intensityRangeInput.value;
 
 		updateIntensityRangeStyle();
-	}
+	};
 
 	// Переключение вкладок
 	function switchTabs(button) {
@@ -143,36 +128,39 @@ document.addEventListener('DOMContentLoaded', () => {
 		settings.contrast = contrastRangeInput.value;
 		settings.brightness = brightnessRangeInput.value;
 		settings.grayscale = grayscaleRangeInput.value;
-		settings.color = rgbToHex(window.getComputedStyle(determineCheckedButton(colorButtonList)).backgroundColor);
 
-		let currentTab = determineCheckedButton(allScreenFilterTabs);
-		let currentMode = determineCheckedButton(allModeTabs);
+		const activeColorButtonId = determineCheckedButtonId( colorButtonList );
+		const colorButtonElement = document.getElementById( activeColorButtonId );
+		const computedBgColor = window.getComputedStyle( colorButtonElement ).backgroundColor;
+		settings.color = rgbToHex( computedBgColor );
 
-		if (currentMode.id == 'screenFiltersButton') {
-			settings.currentMode = 'filters';
-		} else {
-			settings.currentMode = 'darkMode';
-		}
+		let currentTab = determineCheckedButtonId( allScreenFilterTabs );
+		let currentMode = determineCheckedButtonId( allModeTabs );
+
+		settings.currentMode = currentMode === 'screenFiltersButton' ? 'filters' : 'darkMode';
 
 		if (currentTab) {
-			switch (currentTab.id) {
-				case 'screenFilterShadeButton':
+			const tabHandlers = {
+				'screenFilterShadeButton': () => {
 					shadeSeparateInput = intensityRangeInput.value;
 					settings.shade = shadeSeparateInput;
 					settings.currentTab = 'shade';
-					break;
-				case 'screenFilterBlueLightButton':
+				},
+				'screenFilterBlueLightButton': () => {
 					blueLightSeparateInput = intensityRangeInput.value;
 					settings.blueLight = blueLightSeparateInput;
 					settings.currentTab = 'blueLight';
-					break;
-				case 'screenFilterColorButton':
+				},
+				'screenFilterColorButton': () => {
 					colorSeparateInput = intensityRangeInput.value;
 					settings.colorIntensity = colorSeparateInput;
 					settings.currentTab = 'color';
-					break;
-			}
-		}
+				}
+			};
+		
+			const handler = tabHandlers[currentTab];
+			if (handler) handler();
+		};
 
 		chrome.storage.local.set(settings);
 		// Отладка - логирование хранилища
@@ -431,29 +419,29 @@ document.addEventListener('DOMContentLoaded', () => {
               ['currentTab', 'currentMode'], 
               function(data) {
                 // Установка активного режима
-				        if (data.currentMode == 'darkMode') {
-					        darkModeButton.checked = true;
-					        switchTabs(darkModeButton);
-				        } else {
-					        screenFilterButton.checked = true;
-				        }
+				if (data.currentMode == 'darkMode') {
+				    darkModeButton.checked = true;
+				    switchTabs(darkModeButton);
+				} else {
+				    screenFilterButton.checked = true;
+				}
 
-				        // Установка активной вкладки
-				        switch (data.currentTab) {
-					        case 'shade':
-						        screenFilterShadeButton.checked = true;
-						        intensityRangeInput.value = shadeSeparateInput;
-						      break;
-					      case 'blueLight':
-						        screenFilterBlueLightButton.checked = true;
-						        intensityRangeInput.value = blueLightSeparateInput;
-						    break;
-					      case 'color':
-						      screenFilterColorButton.checked = true;
-						      intensityRangeInput.value = colorSeparateInput;
-						      showColorSetting();
-						    break;
-				        }
+				// Установка активной вкладки
+				switch (data.currentTab) {
+				    case 'shade':
+				        screenFilterShadeButton.checked = true;
+				        intensityRangeInput.value = shadeSeparateInput;
+				      break;
+				  case 'blueLight':
+				        screenFilterBlueLightButton.checked = true;
+				        intensityRangeInput.value = blueLightSeparateInput;
+				    break;
+				  case 'color':
+				      screenFilterColorButton.checked = true;
+				      intensityRangeInput.value = colorSeparateInput;
+				      showColorSetting();
+				    break;
+				}
               });
           }
         }
