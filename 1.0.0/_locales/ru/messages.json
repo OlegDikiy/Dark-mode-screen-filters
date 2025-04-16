@@ -1,0 +1,41 @@
+{
+    "appName": {
+      "message": "Темный режим и фильтры экрана"
+    },
+    "shortDesc": {
+      "message": "Тут будет лаконичное описание."
+    },
+    "storeDesc": {
+    "message": "Текст для стора."
+    },
+    "intensity": {
+      "message": "Интенсивность"
+    },
+    "contrast": {
+      "message": "Контрастность"
+    },
+    "brightness": {
+      "message": "Яркость"
+    },
+    "grayscale": {
+      "message": "Полутона"
+    },
+    "rateUs": {
+      "message": "Оцените нас:"
+    },
+    "screenFilters": {
+      "message": "Фильтры экрана"
+    }, 
+    "darkMode": {
+      "message": "Тёмный режим"
+    },
+    "shade": {
+      "message": "Затемнение"
+    },
+    "blueLight": {
+      "message": "Синий"
+    },
+    "color": {
+      "message": "Цвет"
+    }
+ }

@@ -1,0 +1,40 @@
+{
+    "action": {
+       "default_icon": {
+          "128": "icon/icon-128.png",
+          "48": "icon/icon-48.png",
+          "32": "icon/icon-32.png",
+          "16": "icon/icon-16.png"
+       },
+       "default_popup": "popup/popup.html",
+       "default_title": "Dark mode & screen filters"
+    },
+    "background": {
+       "service_worker": "background.js"
+    },
+    "content_scripts": [ {
+       "js": [ "contentScript.js" ],
+       "matches": [ "\u003Call_urls\u003E" ]
+    } ],
+    "content_security_policy": {
+       "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+    "default_locale": "en",
+    "description": "__MSG_shortDesc__",
+    "host_permissions": [ "http://*/*", "https://*/*" ],
+    "icons": {
+       "128": "icon/icon-128.png",
+       "48": "icon/icon-48.png",
+       "32": "icon/icon-32.png",
+       "16": "icon/icon-16.png" 
+    },
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqAjJVmrHegIgSKSdskPKc/bPubL9e5h5JeykMTEEKILifO5NFvH9gd5vlEynF/wmGIZUub6gikPSdAWjIoQXfXguyGLKWyALO3IZyS0pqoFLgzKrxrd9ObfCpXE+7nImpCoR5FxVqtvwBdCcyfP6N+W1WQntxZEhSqtMTEP04Ruf4DpNNV87eGWQTglb+PllXbfchYuCREDEbZv454n2HyyOgmUNcHPhxbi5pepKxB0B2Vul2vx7TAA/zRNjBk0n24HrtM0Ebv3tzmKQPXNtlRnGFiGhBLd5HPo7yup0oc2mNe+HvGB9PbO4mB3ARr1CDK/VmXeJbqLfeCHrnvdabQIDAQAB",
+    "manifest_version": 3,
+    "name": "__MSG_appName__",
+    "permissions": [ "tabs", "scripting", "storage" ],
+    "version": "1.0.0",
+    "web_accessible_resources": [ {
+       "matches": [ "\u003Call_urls\u003E" ],
+       "resources": ["hello.html", "contentScript.css", "assets/icons/*.svg", "assets/fonts/*" ]
+    } ]
+ }

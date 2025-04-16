@@ -1,0 +1,41 @@
+{
+  "appName": {
+    "message": "Dark mode & screen filters"
+  },
+  "shortDesc": {
+    "message": "Short description."
+  },
+  "storeDesc": {
+  "message": "Text for store."
+  },
+  "intensity": {
+    "message": "Intensity"
+  },
+  "contrast": {
+    "message": "Contrast"
+  },
+  "brightness": {
+    "message": "Brightness"
+  },
+  "grayscale": {
+    "message": "Grayscale"
+  },
+  "rateUs": {
+    "message": "Rate us:"
+  },
+  "screenFilters": {
+    "message": "Screen Filters"
+  }, 
+  "darkMode": {
+    "message": "Dark mode"
+  },
+  "shade": {
+    "message": "Shade"
+  },
+  "blueLight": {
+    "message": "Blue Light"
+  },
+  "color": {
+    "message": "Color"
+  }
+}

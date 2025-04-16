@@ -1,0 +1,473 @@
+document.addEventListener('DOMContentLoaded', () => {
+	// DOM элементы
+	const intensityRangeInput = document.getElementById('screenFilterIntensity');
+	const intensityRangeCounter = document.querySelector('.intensity-range-counter');
+	
+	const contrastRangeInput = document.getElementById('darkModeContrastRange');
+	const contrastRangeCounter = document.querySelector('.contrast-range-counter');
+	
+	const brightnessRangeInput = document.getElementById('darkModeBrightnessRange');
+	const brightnessRangeCounter = document.querySelector('.brightness-range-counter');
+	
+	const grayscaleRangeInput = document.getElementById('darkModeGrayScaleRange');
+	const grayscaleRangeCounter = document.querySelector('.grayscale-range-counter');
+	
+	const colorButtonList = document.querySelectorAll('.color-filter-button');
+	const allRangeInputs = document.querySelectorAll('.screenFilterRange');
+	const allModeTabs = document.querySelectorAll('.filter-mode-button');
+	const allScreenFilterTabs = document.querySelectorAll('.screen-filter-type-button');
+  	const allStarsButton = document.querySelectorAll('.rating-form-star');
+	
+	const screenFilterColorButton = document.querySelector('#screenFilterColorButton');
+	const screenFilterShadeButton = document.querySelector('#screenFilterShadeButton');
+	const screenFilterBlueLightButton = document.querySelector('#screenFilterBlueLightButton');
+	
+	const screenFilterButton = document.querySelector('#screenFiltersButton');
+	const darkModeButton = document.querySelector('#darkModeButton');
+  	const shutdownButton = document.querySelector('.shutdown-button');
+	
+	let shadeSeparateInput = 0;
+	let blueLightSeparateInput = 0;
+	let colorSeparateInput = 0;
+
+  // Первый запуск 
+  intensityRangeInput.addEventListener('mousedown', () => {
+    const noActiveFilter = (
+      !screenFilterBlueLightButton?.checked &&
+      !screenFilterShadeButton?.checked &&
+      !screenFilterColorButton?.checked
+    );
+
+    if (intensityRangeInput.value == '0' && noActiveFilter) {
+      console.log('paw');
+      screenFilterShadeButton.checked = true;
+    }
+  });
+
+  allScreenFilterTabs.forEach(element => {
+    element.addEventListener('click', function() {
+      const settingsMap = {
+        'screenFilterShadeButton': { key: 'shade', defaultValue: 50, varName: 'shadeSeparateInput' },
+        'screenFilterBlueLightButton': { key: 'blueLight', defaultValue: 50, varName: 'blueLightSeparateInput' },
+        'screenFilterColorButton': { key: 'colorIntensity', defaultValue: 50, varName: 'colorIntensity' }
+      };
+
+      const config = settingsMap[element.id];
+      if (!config) return;
+
+      chrome.storage.local.get(config.key, (settings) => {
+        if (!(config.key in settings)) {
+          // Устанавливаем значение по умолчанию
+          window[config.varName] = config.defaultValue;
+          intensityRangeInput.value = config.defaultValue;
+          updateIntensityRangeStyle();
+          console.log(window[config.varName]);
+        }
+        writeSettings();
+      });
+    });
+  });
+
+	// Вспомогательные функции
+	function determineCheckedButton(list) {
+		for (const button of list) {
+			if (button.checked) {
+				return button;
+			}
+		}
+		return null;
+	}
+
+	function rgbToHex(rgb) {
+		const [r, g, b] = rgb.match(/\d+/g).map(Number);
+		return '#' + [r, g, b].map(x => 
+			x.toString(16).padStart(2, '0')
+		).join('');
+	}
+
+	function findButtonByColor(colorButtons, targetColor) {
+		if (!targetColor) return null;
+		
+		for (let i = colorButtons.length - 1; i >= 0; i--) {
+			if (colorButtons[i].color.toLowerCase() === targetColor) {
+				return colorButtons[i].obj;
+			}
+		}
+		return null;
+	}
+
+	// Разделение range input для фильтров
+	document.querySelectorAll('.screen-filter-type-button').forEach(element => {
+		element.addEventListener('click', separateInput);
+	});
+
+	function separateInput() {
+		let currentTab = determineCheckedButton( allScreenFilterTabs );
+		switch (currentTab.id) {
+			case 'screenFilterShadeButton':
+				intensityRangeInput.value = shadeSeparateInput;
+				break;
+			case 'screenFilterBlueLightButton':
+				intensityRangeInput.value = blueLightSeparateInput;
+				break;
+			case 'screenFilterColorButton':
+				intensityRangeInput.value = colorSeparateInput;
+				break;
+		}
+
+		updateIntensityRangeStyle();
+	}
+
+	// Переключение вкладок
+	function switchTabs(button) {
+		switch(button) {
+			case screenFilterButton:
+				document.querySelector('.dark-mode-settings').style.display = 'none';
+				document.querySelector('.screen-filters-settings').style.display = 'block';
+				activeTab = screenFilterButton;
+				break;
+			case darkModeButton:
+				document.querySelector('.screen-filters-settings').style.display = 'none';
+				document.querySelector('.dark-mode-settings').style.display = 'block';
+				activeTab = darkModeButton;
+				break;
+		}
+	}
+
+	// Сохранение настроек
+	function writeSettings() {
+		const settings = {
+			color: '#FF6A6A',
+		};
+
+		settings.contrast = contrastRangeInput.value;
+		settings.brightness = brightnessRangeInput.value;
+		settings.grayscale = grayscaleRangeInput.value;
+		settings.color = rgbToHex(window.getComputedStyle(determineCheckedButton(colorButtonList)).backgroundColor);
+
+		let currentTab = determineCheckedButton(allScreenFilterTabs);
+		let currentMode = determineCheckedButton(allModeTabs);
+
+		if (currentMode.id == 'screenFiltersButton') {
+			settings.currentMode = 'filters';
+		} else {
+			settings.currentMode = 'darkMode';
+		}
+
+		if (currentTab) {
+			switch (currentTab.id) {
+				case 'screenFilterShadeButton':
+					shadeSeparateInput = intensityRangeInput.value;
+					settings.shade = shadeSeparateInput;
+					settings.currentTab = 'shade';
+					break;
+				case 'screenFilterBlueLightButton':
+					blueLightSeparateInput = intensityRangeInput.value;
+					settings.blueLight = blueLightSeparateInput;
+					settings.currentTab = 'blueLight';
+					break;
+				case 'screenFilterColorButton':
+					colorSeparateInput = intensityRangeInput.value;
+					settings.colorIntensity = colorSeparateInput;
+					settings.currentTab = 'color';
+					break;
+			}
+		}
+
+		chrome.storage.local.set(settings);
+		// Отладка - логирование хранилища
+		chrome.storage.local.get(null, function(data) {
+			console.log("Все данные из хранилища:", data);
+		});
+	}
+
+	// Обработчики изменений настроек
+	[...allRangeInputs, ...colorButtonList, ...allScreenFilterTabs, ...allModeTabs].forEach(element => {
+		element.addEventListener(element === 'range' ? 'input' : 'click', writeSettings);
+	});
+
+	// Загрузка настроек
+	function loadSettings() {
+		chrome.storage.local.get(
+			['blueLight', 'colorIntensity', 'shade', 'brightness', 'contrast', 'grayscale', 'color', 'currentTab', 'currentMode', 'rollup'], 
+			function(data) {
+				// Установка значений для раздельных фильтров
+				blueLightSeparateInput = data.blueLight || 0;
+				colorSeparateInput = data.colorIntensity || 0;
+				shadeSeparateInput = data.shade || 0;
+
+				// Установка активного режима
+				if (data.currentMode == 'darkMode') {
+					darkModeButton.checked = true;
+					switchTabs(darkModeButton);
+				} else {
+					screenFilterButton.checked = true;
+				}
+
+				// Установка активной вкладки
+				switch (data.currentTab) {
+					case 'shade':
+						screenFilterShadeButton.checked = true;
+						intensityRangeInput.value = shadeSeparateInput;
+						break;
+					case 'blueLight':
+						screenFilterBlueLightButton.checked = true;
+						intensityRangeInput.value = blueLightSeparateInput;
+						break;
+					case 'color':
+						screenFilterColorButton.checked = true;
+						intensityRangeInput.value = colorSeparateInput;
+						showColorSetting();
+						break;
+				}
+				
+				// Установка значений для range inputs
+				if (data.brightness) brightnessRangeInput.value = data.brightness;
+				if (data.contrast) contrastRangeInput.value = data.contrast;
+				if (data.grayscale) grayscaleRangeInput.value = data.grayscale;
+				
+				// Восстановление цветных radio-кнопок
+				const colorButtons = [
+					{ obj: document.getElementById('color-filter-button1'), color: '#FF6A6A' },
+					{ obj: document.getElementById('color-filter-button2'), color: '#FEB669' },
+					{ obj: document.getElementById('color-filter-button3'), color: '#EB7FED' },
+					{ obj: document.getElementById('color-filter-button4'), color: '#56F8BF' },
+					{ obj: document.getElementById('color-filter-button5'), color: '#E7F589' },
+					{ obj: document.getElementById('color-filter-button6'), color: '#9DE6FD' },
+					{ obj: document.getElementById('color-filter-button7'), color: '#53A9FF' },
+				];
+
+				if (data.color) {
+					let checkedColor = findButtonByColor(colorButtons, data.color);
+					checkedColor.checked = true;
+				}
+
+				// Обновление стилей range inputs
+				updateIntensityRangeStyle();
+				updateContrastRange();
+				updateBrightnessRange();
+				updateGrayscaleRange();
+			
+        if (data.rollup === true) {  // Используем строгое сравнение с boolean
+          console.log('загруженное состояние, свернуто');
+          shutdownButton.checked = true;  // Устанавливаем состояние чекбокса
+          shutdown();
+      };
+      }
+		);
+	}
+
+	// Обработчики переключения вкладок
+	screenFilterButton.addEventListener('click', () => {
+		switchTabs(screenFilterButton);
+	});
+
+	darkModeButton.addEventListener('click', () => {
+		switchTabs(darkModeButton);
+	});
+
+	// Видимость настроек цвета
+	function showColorSetting() {
+		if (screenFilterColorButton.checked) {
+			document.querySelector('.color-filter-setting').style.display = 'flex';
+		} else {
+			document.querySelector('.color-filter-setting').style.display = 'none';
+		}
+	}
+
+	screenFilterColorButton.addEventListener('click', showColorSetting);
+	screenFilterShadeButton.addEventListener('click', showColorSetting);
+	screenFilterBlueLightButton.addEventListener('click', showColorSetting);
+
+	// Функции стилизации range inputs
+	const updateIntensityRangeStyle = () => {
+		const value = intensityRangeInput.value;
+		const max = intensityRangeInput.max;
+		const percent = (value / max) * 100;
+
+		intensityRangeInput.style.background = `
+			linear-gradient(
+				to right,
+				var(--checked-mode-button-bg-color) ${percent}%,
+				var(--range-slider-inactive-color) ${percent}%
+			)
+		`;
+
+		intensityRangeCounter.textContent = `${value}%`;
+	};
+
+	const updateCenteredRangeStyle = (input, counter) => {
+		const value = parseFloat(input.value);
+		const min = parseFloat(input.min);
+		const max = parseFloat(input.max);
+
+		let percent;
+		if (value >= 0) {
+			percent = (value / max) * 50;
+			input.style.background = `
+				linear-gradient(
+					to right,
+					var(--range-slider-inactive-color) 50%,
+					var(--checked-mode-button-bg-color) 50%,
+					var(--checked-mode-button-bg-color) ${50 + percent}%,
+					var(--range-slider-inactive-color) ${50 + percent}%
+				)
+			`;
+		} else {
+			percent = (Math.abs(value) / Math.abs(min)) * 50;
+			input.style.background = `
+				linear-gradient(
+					to right,
+					var(--range-slider-inactive-color) ${50 - percent}%,
+					var(--checked-mode-button-bg-color) ${50 - percent}%,
+					var(--checked-mode-button-bg-color) 50%,
+					var(--range-slider-inactive-color) 50%
+				)
+			`;
+		}
+
+		counter.textContent = `${value}`;
+	};
+
+	// Инициализация range inputs
+	intensityRangeInput.addEventListener('input', updateIntensityRangeStyle);
+	updateIntensityRangeStyle();
+
+	const updateContrastRange = () => updateCenteredRangeStyle(contrastRangeInput, contrastRangeCounter);
+	contrastRangeInput.addEventListener('input', updateContrastRange);
+	updateContrastRange();
+
+	const updateBrightnessRange = () => updateCenteredRangeStyle(brightnessRangeInput, brightnessRangeCounter);
+	brightnessRangeInput.addEventListener('input', updateBrightnessRange);
+	updateBrightnessRange();
+
+	const updateGrayscaleRange = () => updateCenteredRangeStyle(grayscaleRangeInput, grayscaleRangeCounter);
+	grayscaleRangeInput.addEventListener('input', updateGrayscaleRange);
+	updateGrayscaleRange();
+
+	// Рейтинг звёздами
+	document.querySelectorAll('.rating-form-star').forEach((star, index, stars) => {
+		star.addEventListener('click', () => {
+			stars.forEach(s => s.classList.remove('active'));
+			stars.forEach((s, i) => {
+				if (i >= index) s.classList.add('active');
+			});
+		});
+	});
+
+  // Сохранение звёзд
+  allStarsButton.forEach(element => {
+    element.addEventListener('click', function() {
+      chrome.storage.local.clear();
+    });
+  });
+
+  // Кнннопка выключения
+  shutdownButton.addEventListener('click', ()=> {
+    shutdown();
+    if (shutdownButton.checked) {
+      chrome.storage.local.set({ rollup: true });
+      chrome.storage.local.get(null, function(data) {
+        console.log("Все данные из хранилища:", data);
+      });
+    } else {
+      chrome.storage.local.set({ rollup: false });
+      chrome.storage.local.get(null, function(data) {
+        console.log("Все данные из хранилища:", data);
+      });
+    }
+  })
+
+  function shutdown () {
+    console.log("shutdown func");
+    if (shutdownButton.checked) {
+          [...allScreenFilterTabs, ...allModeTabs].forEach(tab => {
+            tab.checked = false;
+          });
+        };
+
+    const main = document.querySelector('main');
+        
+    Array.from(main.children).forEach(child => {
+      if (child.tagName === 'DIV' && 
+        !child.classList.contains('filter-mode-bar') && 
+        !child.classList.contains('rate-us')) {
+              
+          if (shutdownButton.checked) {
+            child.classList.add('hidden');
+          } else {
+            child.classList.remove('hidden');
+            chrome.storage.local.get(
+              ['currentTab', 'currentMode'], 
+              function(data) {
+                // Установка активного режима
+				        if (data.currentMode == 'darkMode') {
+					        darkModeButton.checked = true;
+					        switchTabs(darkModeButton);
+				        } else {
+					        screenFilterButton.checked = true;
+				        }
+
+				        // Установка активной вкладки
+				        switch (data.currentTab) {
+					        case 'shade':
+						        screenFilterShadeButton.checked = true;
+						        intensityRangeInput.value = shadeSeparateInput;
+						      break;
+					      case 'blueLight':
+						        screenFilterBlueLightButton.checked = true;
+						        intensityRangeInput.value = blueLightSeparateInput;
+						    break;
+					      case 'color':
+						      screenFilterColorButton.checked = true;
+						      intensityRangeInput.value = colorSeparateInput;
+						      showColorSetting();
+						    break;
+				        }
+              });
+          }
+        }
+    });
+  };
+
+  allModeTabs.forEach(element => {
+    element.addEventListener('click', function() {
+        if (shutdownButton.checked) {
+          console.log('hi');
+          shutdownButton.checked = false;
+          shutdown();
+          chrome.storage.local.set({ rollup: false });
+        }; 
+    });
+  });
+
+	// Локализация
+	const elements = document.querySelectorAll('[data-i18n]');
+	
+	elements.forEach(element => {
+		const messageName = element.getAttribute('data-i18n');
+		element.textContent = chrome.i18n.getMessage(messageName);
+		
+		if (element.hasAttribute('data-i18n-attr')) {
+			const attrName = element.getAttribute('data-i18n-attr');
+			element.setAttribute(attrName, chrome.i18n.getMessage(messageName));
+		}
+	});
+
+	// Локализация псевдоэлементов
+	document.querySelectorAll('[data-i18n-after]').forEach(element => {
+		const messageName = element.getAttribute('data-i18n-after');
+		const translatedText = chrome.i18n.getMessage(messageName);
+		
+		const style = document.createElement('style');
+		style.textContent = `
+			#${element.id}::after {
+				content: "${translatedText}" !important;
+			}
+		`;
+		document.head.appendChild(style);
+	});
+
+	// Инициализация
+	loadSettings();
+});

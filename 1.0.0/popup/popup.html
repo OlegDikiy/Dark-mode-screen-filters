@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="appName"></title>
+    <link rel="stylesheet" href="css_reset.css">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <div class="filter-mode-bar">
+      <input class="filter-mode-button" id="screenFiltersButton" name="filter-mode" type="radio" value="Screen Filters" data-i18n-after="screenFilters" checked>
+      <input class="filter-mode-button" id="darkModeButton" name="filter-mode" type="radio" value="Dark mode" data-i18n-after="darkMode">
+    </div>
+    <div class="screen-filters-settings">
+      <div class="screen-filter-type-bar">
+        <input class="screen-filter-type-button" id="screenFilterShadeButton" name="screen-filter-mode" type="radio" value="Shade" data-i18n-after="shade">
+        <input class="screen-filter-type-button" id="screenFilterBlueLightButton" name="screen-filter-mode" type="radio" value="Blue Light" data-i18n-after="blueLight">
+        <input class="screen-filter-type-button" id="screenFilterColorButton" name="screen-filter-mode" type="radio" value="Color" data-i18n-after="color">
+      </div>
+      <div class="color-filter-setting">
+        <input class="color-filter-button" id="color-filter-button1" name="color-filter-color" type="radio" value="Color1" checked>
+        <input class="color-filter-button" id="color-filter-button2" name="color-filter-color" type="radio" value="Color2">
+        <input class="color-filter-button" id="color-filter-button3" name="color-filter-color" type="radio" value="Color3">
+        <input class="color-filter-button" id="color-filter-button4" name="color-filter-color" type="radio" value="Color4">
+        <input class="color-filter-button" id="color-filter-button5" name="color-filter-color" type="radio" value="Color5">
+        <input class="color-filter-button" id="color-filter-button6" name="color-filter-color" type="radio" value="Color6">
+        <input class="color-filter-button" id="color-filter-button7" name="color-filter-color" type="radio" value="Color7">
+      </div>
+      <div class="intensity-range-bar">
+        <div class="range-wrapper">
+          <p data-i18n="intensity"></p>
+          <p class="intensity-range-counter">100%</p>
+        </div>
+        <input type="range" min="0" max="100" id="screenFilterIntensity" class="screenFilterRange" value="0">
+      </div>
+    </div>
+    <div class="dark-mode-settings">
+      <div class="range-bar">
+        <div class="range-wrapper">
+          <p data-i18n="contrast"></p>
+          <p class="contrast-range-counter">0</p>
+        </div>
+        <input type="range" min="-100" max="100" id="darkModeContrastRange" class="screenFilterRange" value="0">
+      </div>
+      <div class="range-bar">
+        <div class="range-wrapper">
+          <p data-i18n="brightness"></p>
+          <p class="brightness-range-counter">0</p>
+        </div>
+        <input type="range" min="-100" max="100" id="darkModeBrightnessRange" class="screenFilterRange" value="0">
+      </div>
+      <div class="range-bar">
+        <div class="range-wrapper">
+          <p data-i18n="grayscale"></p>
+          <p class="grayscale-range-counter">0</p>
+        </div>
+        <input type="range" min="-100" max="100" id="darkModeGrayScaleRange" class="screenFilterRange" value="0">
+      </div>
+    </div>
+    <div class="rate-us">
+      <div class="rating-form-wrapper">
+        <p data-i18n="rateUs" class="rating-form-text"></p>
+        <div class="rating-form">
+          <input type="radio" class="rating-form-star" id="star5" name="rating" value="5">
+          <input type="radio" class="rating-form-star" id="star4" name="rating" value="4">
+          <input type="radio" class="rating-form-star" id="star3" name="rating" value="3">
+          <input type="radio" class="rating-form-star" id="star2" name="rating" value="2">
+          <input type="radio" class="rating-form-star" id="star1" name="rating" value="1">
+        </div>
+      </div>
+      <input type="checkbox" class="shutdown-button"/>
+    </div>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
