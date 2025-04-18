@@ -14,7 +14,8 @@
     },
     "content_scripts": [ {
        "js": [ "contentScript.js" ],
-       "matches": [ "\u003Call_urls\u003E" ]
+       "matches": [ "\u003Call_urls\u003E" ],
+       "run_at": "document_end"
     } ],
     "content_security_policy": {
        "extension_pages": "script-src 'self'; object-src 'self'"

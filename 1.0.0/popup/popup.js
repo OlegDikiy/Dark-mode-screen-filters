@@ -371,6 +371,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Кнннопка выключения
   shutdownButton.addEventListener('click', ()=> {
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		const tabId = tabs[0].id;
+		chrome.tabs.sendMessage(tabId, {
+			type: "SAY_HELLO",
+			color: '#FFF'
+		});
+	});
+
     shutdown();
     if (shutdownButton.checked) {
       chrome.storage.local.set( { rollup: true } );
@@ -386,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   function shutdown () {
-    console.log("shutdown func");
     if (shutdownButton.checked) {
           [...allScreenFilterTabs, ...allModeTabs].forEach(tab => {
             tab.checked = false;
