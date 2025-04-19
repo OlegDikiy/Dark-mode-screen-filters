@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const urlStorePage = 'https://google.com';
 	const urlFeedback = 'https://ya.ru';
 
+	const shadeFilterColor = '#141418';
+	const blueLightFilterColor = '#FF9E2D';
+
 	const intensityRangeInput = document.getElementById('screenFilterIntensity');
 	const intensityRangeCounter = document.querySelector('.intensity-range-counter');
 	
@@ -74,6 +77,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 	// Вспомогательные функции
+	function isSystemPage(url) {
+		const systemPrefixes = [
+		  'chrome://',    // Страницы Chrome (настройки, история)
+		  'about:',       // about:blank, about:newtab
+		  'edge://',      // Для Microsoft Edge
+		  'opera://',     // Для Opera
+		  'chrome-extension://',  // Другие расширения
+		  'moz-extension://'      // Firefox
+		];
+		return systemPrefixes.some(prefix => url.startsWith(prefix));
+	  }
+
+  	function sender(color, intensity) {
+		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+			const tab = tabs[0];
+			if (tab?.url && !isSystemPage(tab.url)) {
+				const tabId = tabs[0].id;
+				chrome.tabs.sendMessage(tabId, {
+					type: "COLOR_FILTER",
+					color: color,
+					intensity: intensity
+				});
+			}
+		})
+	};
+
 	function determineCheckedButtonId(list) {
 		for (const button of list) {
 			if (button.checked) {
@@ -87,7 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		return '#' + [r, g, b].map(x => 
 		  x.toString(16).padStart(2, '0')
 		).join('').toLowerCase();
-	  }
+	  };
+
+	function hexToRgb(hex) {
+		const r = parseInt(hex.substring(1, 3), 16);
+		const g = parseInt(hex.substring(3, 5), 16);
+		const b = parseInt(hex.substring(5, 7), 16);
+		return `rgb(${r}, ${g}, ${b})`;
+	};
 
 	// Разделение range input для фильтров
 	allScreenFilterTabs.forEach(element => {
@@ -371,14 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Кнннопка выключения
   shutdownButton.addEventListener('click', ()=> {
-	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		const tabId = tabs[0].id;
-		chrome.tabs.sendMessage(tabId, {
-			type: "SAY_HELLO",
-			color: '#FFF'
-		});
-	});
-
     shutdown();
     if (shutdownButton.checked) {
       chrome.storage.local.set( { rollup: true } );
@@ -446,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   allModeTabs.forEach(element => {
     element.addEventListener('click', function() {
+		sender();
         if (shutdownButton.checked) {
           console.log('hi');
           shutdownButton.checked = false;
@@ -482,6 +511,24 @@ document.addEventListener('DOMContentLoaded', () => {
 		document.head.appendChild(style);
 	});
 
+	//Отправка цветов и интенсивности для фильтров
+	intensityRangeInput.addEventListener('change', ()=> {
+		let sendingColor = shadeFilterColor;
+		let intensity = intensityRangeInput.value;
+		const buttonId = determineCheckedButtonId( allScreenFilterTabs );
+		switch (buttonId) {
+			case 'screenFilterShadeButton':
+				sendingColor = hexToRgb( shadeFilterColor );
+			break
+			case 'screenFilterBlueLightButton':
+				sendingColor = hexToRgb( blueLightFilterColor );
+			break
+			case 'screenFilterColorButton':
+
+			break
+		}
+		sender( sendingColor, intensity);
+	});
 	// Инициализация
 	loadSettings();
 });
