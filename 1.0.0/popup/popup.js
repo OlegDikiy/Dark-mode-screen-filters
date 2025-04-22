@@ -89,19 +89,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		return systemPrefixes.some(prefix => url.startsWith(prefix));
 	  }
 
-  	function sendMessage (color) {
+  	function sendMessage(color) {
 		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-			const tab = tabs[0];
-			if (tab?.url && !isSystemPage(tab.url)) {
-				const tabId = tabs[0].id;
-				chrome.tabs.sendMessage(tabId, {
-					type: "COLOR_FILTER",
-					color: color
-				});
-			}
-		})
-		console.log('send', color);
-	};
+		  const tab = tabs[0];
+		  if (tab?.url && !isSystemPage(tab.url)) {
+			const tabId = tabs[0].id;
+			chrome.tabs.sendMessage(tabId, {
+			  type: "COLOR_FILTER",
+			  color: color,
+			  isUserAction: true // Помечаем как пользовательское действие
+			});
+		  }
+		});
+	  }
 
 	function determineCheckedButtonId( list ) {
 		for (const button of list) {
@@ -132,19 +132,42 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Разделение range input для фильтров
 	allScreenFilterTabs.forEach(element => {
 		element.addEventListener('click', function() {
-			// 1. Обновляем состояние кнопки
-			this.checked = true;
-			separateInput();
-			sendMessage ( getColorSettings () );
+		  this.checked = true;
+		  separateInput();
+		  const color = getColorSettings();
+		  chrome.storage.local.set({ colorFilterRgba: color });
+		  sendMessage(color);
 		});
-	});
+	  });
 
 	// Отправка сообщения при клике на кнопки цветов
 	colorButtonList.forEach(element => {
 		element.addEventListener('click', function() {
-			sendMessage ( getColorSettings () );
+		  const color = getColorSettings();
+		  chrome.storage.local.set({ colorFilterRgba: color });
+		  sendMessage(color);
 		});
-	});
+	  });
+	
+	  intensityRangeInput.addEventListener('input', () => {
+		if (!intensityRangeInput.hasAttribute('dragging')) {
+		  const color = getColorSettings();
+		  chrome.storage.local.set({ colorFilterRgba: color });
+		  sendMessage(color);
+		}
+	  });
+	  
+	  intensityRangeInput.addEventListener('mousedown', () => {
+		intensityRangeInput.setAttribute('dragging', 'true');
+	  });
+	  
+	  intensityRangeInput.addEventListener('mouseup', () => {
+		intensityRangeInput.removeAttribute('dragging');
+		const color = getColorSettings();
+		chrome.storage.local.set({ colorFilterRgba: color });
+		sendMessage(color);
+	  });
+
 
 	function separateInput() {
 		const valueMap = {
@@ -428,11 +451,13 @@ document.addEventListener('DOMContentLoaded', () => {
     shutdown();
     if (shutdownButton.checked) {
       chrome.storage.local.set( { rollup: true } );
+	  chrome.storage.local.set({ isEnabled: false });
       chrome.storage.local.get(null, function(data) {
         console.log("Все данные из хранилища:", data);
       });
     } else {
       chrome.storage.local.set({ rollup: false });
+	  chrome.storage.local.set({ isEnabled: true });
       chrome.storage.local.get(null, function(data) {
         console.log("Все данные из хранилища:", data);
       });
@@ -444,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
           [...allScreenFilterTabs, ...allModeTabs].forEach(tab => {
             tab.checked = false;
           });
+		  
         };
 
     const main = document.querySelector('main');
@@ -530,7 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Отправка цветов и интенсивности для фильтров
 	intensityRangeInput.addEventListener('mouseup', ()=> {
-		sendMessage ( getColorSettings () );
+		chrome.storage.local.set({ colorFilterRgba: getColorSettings() });
+		sendMessage ( getColorSettings() );
 	});
 
 	function getColorSettings() {
@@ -561,5 +588,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Инициализация
 	loadSettings();
-	sendMessage ( getColorSettings () );
 });

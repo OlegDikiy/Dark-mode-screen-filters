@@ -1,46 +1,52 @@
-// Color filter
-function findElementsByClass(className) {
-  // Получаем все элементы на странице
-  const allElements = document.querySelectorAll('*');
-  const foundElements = [];
+let overlay = document.querySelector('.ColorFilterOverlay2204') || createOverlay();
+let currentColor = null;
+let currentOpacity = null;
 
-  // Проверяем каждый элемент
-  allElements.forEach(element => {
-    if (element.classList.contains(className)) {
-      foundElements.push(element);
-    }
-  });
-
-  return foundElements;
-}
-
+// Обработчик сообщений
 chrome.runtime.onMessage.addListener((request) => {
   if (request.type !== "COLOR_FILTER") return;
   
-  // Получаем или создаем оверлей
-  let overlay = document.querySelector('.ColorFilterOverlay2204');
-  
-  if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.classList.add('ColorFilterOverlay2204');
-      
-      // Устанавливаем базовые стили
-      overlay.style.position = 'fixed';
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100vw';
-      overlay.style.height = '100vh';
-      overlay.style.zIndex = '2147483647';
-      overlay.style.pointerEvents = 'none';
-      overlay.style.mixBlendMode = 'multiply';
-      overlay.style.transition = 'opacity 0.5s ease, background-color 0.5s ease';
-      
-      document.body.appendChild(overlay);
-      console.log(overlay);
+  if (!overlay || !document.contains(overlay)) {
+    overlay = createOverlay();
   }
   
-  // Применяем текущие параметры
-  overlay.style.backgroundColor = request.color;
-  overlay.style.opacity = request.opacity || '0.5';
+  // Если параметры не изменились - ничего не делаем
+  if (currentColor === request.color && currentOpacity === (request.opacity || '0.5')) {
+    return;
+  }
+  
+  // Запоминаем текущие параметры
+  currentColor = request.color;
+  currentOpacity = request.opacity || '0.5';
+  
+  // Если это инициализация или системное изменение - без анимации
+  if (request.isInitial || !request.isUserAction) {
+    overlay.style.transition = 'none';
+    overlay.style.backgroundColor = currentColor;
+    overlay.style.opacity = currentOpacity;
+    
+    // Восстанавливаем анимацию для будущих изменений
+    setTimeout(() => {
+      overlay.style.transition = 'opacity 0.5s ease, background-color 0.5s ease';
+    }, 10);
+  } else {
+    // Пользовательское изменение - с анимацией
+    overlay.style.backgroundColor = currentColor;
+    overlay.style.opacity = currentOpacity;
+  }
 });
 
+// Проверка storage при загрузке
+chrome.storage.local.get(['colorFilterRgba'], (result) => {
+  if (result.colorFilterRgba) {
+    currentColor = result.colorFilterRgba;
+    currentOpacity = '0.5';
+    overlay.style.transition = 'none';
+    overlay.style.backgroundColor = currentColor;
+    overlay.style.opacity = currentOpacity;
+    
+    setTimeout(() => {
+      overlay.style.transition = 'opacity 0.5s ease, background-color 0.5s ease';
+    }, 10);
+  }
+});
