@@ -1,27 +1,54 @@
 // Color filter
-function createColorFilter(color = 'rgba(255, 200, 150, 0.8)') {
-    const overlay = document.createElement('div');
-    overlay.className = 'color-filter-overlay';
-    overlay.style.backgroundColor = color;
-    document.body.appendChild(overlay);
-    return overlay;
-  };	
-  
-  //createColorFilter();
+function findElementsByClass(className) {
+  // Получаем все элементы на странице
+  const allElements = document.querySelectorAll('*');
+  const foundElements = [];
 
-  chrome.runtime.onMessage.addListener((request) => {
-    if (request.type === "COLOR_FILTER") {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';  // или 'absolute'
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100vw';
-      overlay.style.height = '100vh';
-      overlay.style.zIndex = '2147483647';  // Максимальный z-index
-      overlay.style.backgroundColor = request.color;
-      overlay.style.pointerEvents = 'none';  // Чтобы клики проходили сквозь
-      document.body.appendChild(overlay);
+  // Проверяем каждый элемент
+  allElements.forEach(element => {
+    if (element.classList.contains(className)) {
+      foundElements.push(element);
     }
   });
+
+  return foundElements;
+}
+
+  chrome.runtime.onMessage.addListener((request) => {
+    if (request.type !== "COLOR_FILTER") return;
+    
+    let overlay = document.querySelector('.ColorFilterOverlay2204');
+    
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.classList.add('ColorFilterOverlay2204');
+        Object.assign(overlay.style, {
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100vw',
+            height: '100vh',
+            zIndex: '2147483647',
+            pointerEvents: 'none',
+            mixBlendMode: 'multiply',
+            backgroundColor: request.color,
+            opacity: '0',
+            transition: 'opacity 0.5s ease'
+        });
+        
+        document.body.appendChild(overlay);
+        
+        // Двойной таймаут для гарантии
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                overlay.style.opacity = request.opacity || '0.5';
+            }, 10);
+        });
+    } else {
+        overlay.style.transition = 'background-color 0.5s ease, opacity 0.5s ease';
+        overlay.style.backgroundColor = request.color;
+        overlay.style.opacity = request.opacity || '0.5';
+    }
+});
 
 

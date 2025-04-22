@@ -54,11 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   allScreenFilterTabs.forEach(element => {
     element.addEventListener('click', function() {
-      const settingsMap = {
-        'screenFilterShadeButton': { key: 'shade', defaultValue: 50, varName: 'shadeSeparateInput' },
-        'screenFilterBlueLightButton': { key: 'blueLight', defaultValue: 50, varName: 'blueLightSeparateInput' },
-        'screenFilterColorButton': { key: 'colorIntensity', defaultValue: 50, varName: 'colorIntensity' }
-      };
+      	const settingsMap = {
+        	'screenFilterShadeButton': { key: 'shade', defaultValue: 50, varName: 'shadeSeparateInput' },
+        	'screenFilterBlueLightButton': { key: 'blueLight', defaultValue: 50, varName: 'blueLightSeparateInput' },
+        	'screenFilterColorButton': { key: 'colorIntensity', defaultValue: 50, varName: 'colorIntensity' }
+    	};
 
       const config = settingsMap[element.id];
       if (!config) return;
@@ -89,21 +89,21 @@ document.addEventListener('DOMContentLoaded', () => {
 		return systemPrefixes.some(prefix => url.startsWith(prefix));
 	  }
 
-  	function sender(color, intensity) {
+  	function sendMessage (color) {
 		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 			const tab = tabs[0];
 			if (tab?.url && !isSystemPage(tab.url)) {
 				const tabId = tabs[0].id;
 				chrome.tabs.sendMessage(tabId, {
 					type: "COLOR_FILTER",
-					color: color,
-					intensity: intensity
+					color: color
 				});
 			}
 		})
+		console.log('send', color);
 	};
 
-	function determineCheckedButtonId(list) {
+	function determineCheckedButtonId( list ) {
 		for (const button of list) {
 			if (button.checked) {
 				return button.id;
@@ -125,9 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
 		return `rgb(${r}, ${g}, ${b})`;
 	};
 
+	function rgbToRgba ( color, alpha ) {
+		return color.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+	};
+
 	// Разделение range input для фильтров
 	allScreenFilterTabs.forEach(element => {
-		element.addEventListener('click', separateInput);
+		element.addEventListener('click', function() {
+			sendMessage ( getColorSettings () );
+			element.addEventListener('click', separateInput);
+		});
+	});
+
+	// Отправка сообщения при клике на кнопки цветов
+	colorButtonList.forEach(element => {
+		element.addEventListener('click', function() {
+			sendMessage ( getColorSettings () );
+		});
 	});
 
 	function separateInput() {
@@ -211,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		element.addEventListener(element === 'range' ? 'input' : 'click', writeSettings);
 	});
 
+
+
 	// Загрузка настроек
 	function loadSettings() {
 		chrome.storage.local.get(
@@ -255,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				if ( data.color ) {
 					const setColorFilter = [...document.querySelectorAll('.color-filter-button')]
 					.find(button => {
-    					const buttonColor = rgbToHex(window.getComputedStyle(button).backgroundColor);
+    					const buttonColor = rgbToHex( window.getComputedStyle(button).backgroundColor );
     					return buttonColor === data.color.toLowerCase();
   					});
 
@@ -474,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   allModeTabs.forEach(element => {
     element.addEventListener('click', function() {
-		sender();
         if (shutdownButton.checked) {
           console.log('hi');
           shutdownButton.checked = false;
@@ -512,23 +527,34 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	//Отправка цветов и интенсивности для фильтров
-	intensityRangeInput.addEventListener('change', ()=> {
-		let sendingColor = shadeFilterColor;
-		let intensity = intensityRangeInput.value;
-		const buttonId = determineCheckedButtonId( allScreenFilterTabs );
-		switch (buttonId) {
-			case 'screenFilterShadeButton':
-				sendingColor = hexToRgb( shadeFilterColor );
-			break
-			case 'screenFilterBlueLightButton':
-				sendingColor = hexToRgb( blueLightFilterColor );
-			break
-			case 'screenFilterColorButton':
-
-			break
-		}
-		sender( sendingColor, intensity);
+	intensityRangeInput.addEventListener('mouseup', ()=> {
+		sendMessage ( getColorSettings () );
 	});
+
+	function getColorSettings () {
+		let filterColor;
+		let intensity = intensityRangeInput.value;
+		setTimeout(() => {
+			const buttonId = determineCheckedButtonId( allScreenFilterTabs );
+			switch (buttonId) {
+				case 'screenFilterShadeButton':
+					filterColor = hexToRgb( shadeFilterColor );
+				break
+				case 'screenFilterBlueLightButton':
+					filterColor = hexToRgb( blueLightFilterColor );
+				break
+				case 'screenFilterColorButton':
+					let colorButton = determineCheckedButtonId( colorButtonList );
+					filterColor = window.getComputedStyle( document.getElementById( colorButton ) ).backgroundColor;
+				break
+			}
+			let sendingColor = rgbToRgba( filterColor, ( intensity/100 ) );
+			console.log('getColor', sendingColor);
+			return sendingColor;
+		}, 2);
+	}
+
 	// Инициализация
 	loadSettings();
+	sendMessage ( getColorSettings () );
 });
