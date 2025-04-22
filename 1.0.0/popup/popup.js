@@ -132,8 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Разделение range input для фильтров
 	allScreenFilterTabs.forEach(element => {
 		element.addEventListener('click', function() {
+			// 1. Обновляем состояние кнопки
+			this.checked = true;
+			separateInput();
 			sendMessage ( getColorSettings () );
-			element.addEventListener('click', separateInput);
 		});
 	});
 
@@ -531,27 +533,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		sendMessage ( getColorSettings () );
 	});
 
-	function getColorSettings () {
+	function getColorSettings() {
+		const buttonId = determineCheckedButtonId(allScreenFilterTabs);
+		const intensity = intensityRangeInput.value;
 		let filterColor;
-		let intensity = intensityRangeInput.value;
-		setTimeout(() => {
-			const buttonId = determineCheckedButtonId( allScreenFilterTabs );
-			switch (buttonId) {
-				case 'screenFilterShadeButton':
-					filterColor = hexToRgb( shadeFilterColor );
-				break
-				case 'screenFilterBlueLightButton':
-					filterColor = hexToRgb( blueLightFilterColor );
-				break
-				case 'screenFilterColorButton':
-					let colorButton = determineCheckedButtonId( colorButtonList );
-					filterColor = window.getComputedStyle( document.getElementById( colorButton ) ).backgroundColor;
-				break
-			}
-			let sendingColor = rgbToRgba( filterColor, ( intensity/100 ) );
-			console.log('getColor', sendingColor);
-			return sendingColor;
-		}, 2);
+	
+		switch (buttonId) {
+			case 'screenFilterShadeButton':
+				filterColor = hexToRgb(shadeFilterColor);
+				break;
+			case 'screenFilterBlueLightButton':
+				filterColor = hexToRgb(blueLightFilterColor);
+				break;
+			case 'screenFilterColorButton':
+				const colorButton = determineCheckedButtonId(colorButtonList);
+				filterColor = window.getComputedStyle(document.getElementById(colorButton)).backgroundColor;
+				break;
+			default:
+				// Fallback на случай, если ни одна кнопка не выбрана
+				filterColor = 'rgb(255, 200, 150)';
+		}
+	
+		const sendingColor = rgbToRgba(filterColor, intensity / 100);
+		console.log('getColor', sendingColor);
+		return sendingColor;
 	}
 
 	// Инициализация
