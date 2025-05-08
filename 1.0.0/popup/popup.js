@@ -77,31 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 	// Вспомогательные функции
-	function isSystemPage(url) {
-		const systemPrefixes = [
-		  'chrome://',    // Страницы Chrome (настройки, история)
-		  'about:',       // about:blank, about:newtab
-		  'edge://',      // Для Microsoft Edge
-		  'opera://',     // Для Opera
-		  'chrome-extension://',  // Другие расширения
-		  'moz-extension://'      // Firefox
-		];
-		return systemPrefixes.some(prefix => url.startsWith(prefix));
-	  }
-
-  	function sendMessage(color) {
-		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		  const tab = tabs[0];
-		  if (tab?.url && !isSystemPage(tab.url)) {
-			const tabId = tabs[0].id;
-			chrome.tabs.sendMessage(tabId, {
-			  type: "COLOR_FILTER",
-			  color: color,
-			  isUserAction: true // Помечаем как пользовательское действие
+	
+	function sendMessage( isUserAction ) {
+		return new Promise((resolve) => {
+			chrome.runtime.sendMessage({
+				type: "APPLY_COLOR_FILTER",
+				isUserAction: isUserAction
+			}, (response) => {
+				resolve(response); 
 			});
-		  }
 		});
-	  }
+	};
 
 	function determineCheckedButtonId( list ) {
 		for (const button of list) {
@@ -132,20 +118,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Разделение range input для фильтров
 	allScreenFilterTabs.forEach(element => {
 		element.addEventListener('click', function() {
-		  this.checked = true;
-		  separateInput();
-		  const color = getColorSettings();
-		  chrome.storage.local.set({ colorFilterRgba: color });
-		  sendMessage(color);
+			this.checked = true;
+			separateInput();
+			const color = getColorSettings();
+			chrome.storage.local.set({ colorFilterRgba: color });
+			sendMessage( true );
 		});
-	  });
+	});
 
 	// Отправка сообщения при клике на кнопки цветов
 	colorButtonList.forEach(element => {
 		element.addEventListener('click', function() {
 		  const color = getColorSettings();
 		  chrome.storage.local.set({ colorFilterRgba: color });
-		  sendMessage(color);
+		  sendMessage( true );
 		});
 	  });
 	
@@ -153,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!intensityRangeInput.hasAttribute('dragging')) {
 		  const color = getColorSettings();
 		  chrome.storage.local.set({ colorFilterRgba: color });
-		  sendMessage(color);
+		  sendMessage( true );
 		}
 	  });
 	  
@@ -165,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		intensityRangeInput.removeAttribute('dragging');
 		const color = getColorSettings();
 		chrome.storage.local.set({ colorFilterRgba: color });
-		sendMessage(color);
+		sendMessage( true );
 	  });
 
 
@@ -557,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Отправка цветов и интенсивности для фильтров
 	intensityRangeInput.addEventListener('mouseup', ()=> {
 		chrome.storage.local.set({ colorFilterRgba: getColorSettings() });
-		sendMessage ( getColorSettings() );
+		sendMessage ( true );
 	});
 
 	function getColorSettings() {
@@ -567,14 +553,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 		switch (buttonId) {
 			case 'screenFilterShadeButton':
-				filterColor = hexToRgb(shadeFilterColor);
+				filterColor = hexToRgb( shadeFilterColor );
 				break;
 			case 'screenFilterBlueLightButton':
-				filterColor = hexToRgb(blueLightFilterColor);
+				filterColor = hexToRgb( blueLightFilterColor );
 				break;
 			case 'screenFilterColorButton':
-				const colorButton = determineCheckedButtonId(colorButtonList);
-				filterColor = window.getComputedStyle(document.getElementById(colorButton)).backgroundColor;
+				const colorButton = determineCheckedButtonId( colorButtonList );
+				filterColor = window.getComputedStyle( document.getElementById( colorButton ) ).backgroundColor;
 				break;
 			default:
 				// Fallback на случай, если ни одна кнопка не выбрана
