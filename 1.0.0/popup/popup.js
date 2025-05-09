@@ -78,10 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Вспомогательные функции
 	
-	function sendMessage( isUserAction ) {
+	function sendMessage( type, isUserAction ) {
 		return new Promise((resolve) => {
 			chrome.runtime.sendMessage({
-				type: "APPLY_COLOR_FILTER",
+				type: type,
 				isUserAction: isUserAction
 			}, (response) => {
 				resolve(response); 
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			separateInput();
 			const color = getColorSettings();
 			chrome.storage.local.set({ colorFilterRgba: color });
-			sendMessage( true );
+			sendMessage( "APPLY_COLOR_FILTER", true );
 		});
 	});
 
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		element.addEventListener('click', function() {
 		  const color = getColorSettings();
 		  chrome.storage.local.set({ colorFilterRgba: color });
-		  sendMessage( true );
+		  sendMessage( "APPLY_COLOR_FILTER", true );
 		});
 	  });
 	
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!intensityRangeInput.hasAttribute('dragging')) {
 		  const color = getColorSettings();
 		  chrome.storage.local.set({ colorFilterRgba: color });
-		  sendMessage( true );
+		  sendMessage( "APPLY_COLOR_FILTER", true );
 		}
 	  });
 	  
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		intensityRangeInput.removeAttribute('dragging');
 		const color = getColorSettings();
 		chrome.storage.local.set({ colorFilterRgba: color });
-		sendMessage( true );
+		sendMessage( "APPLY_COLOR_FILTER", true );
 	  });
 
 
@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	//Отправка цветов и интенсивности для фильтров
 	intensityRangeInput.addEventListener('mouseup', ()=> {
 		chrome.storage.local.set({ colorFilterRgba: getColorSettings() });
-		sendMessage ( true );
+		sendMessage ( "APPLY_COLOR_FILTER", true );
 	});
 
 	function getColorSettings() {

@@ -48,7 +48,8 @@ function updateOverlay() {
         backgroundColor: color,
         pointerEvents: 'none',
         mixBlendMode: 'multiply',
-        zIndex: '2147483647'
+        zIndex: '2147483647',
+        transition: 'background-color 0.3s ease'
     });
     } catch (error) {
       console.error('Ошибка при обновлении overlay:', error);
